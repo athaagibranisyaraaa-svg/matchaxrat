@@ -1,0 +1,1897 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Matcha V1 Project</title>
+
+    <link href="https://fonts.cdnfonts.com/css/aquire" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Michroma&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* =========================================
+           VARIABEL WARNA (Default: Tema Putih)
+           ========================================= */
+        :root {
+            --theme-color: #11ab4d; /* Warna aksen hijau */
+            --theme-dark: #ffffff;  /* Background card */
+            --theme-darker: #f2f6f0; /* Background utama */
+            --theme-border: #cccccc;
+            --theme-glow: rgba(17, 171, 77, 0.3);
+            --theme-text: #111111;
+            --theme-subtext: #666666;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: 'Aquire', 'Michroma', 'Orbitron', 'Arial', sans-serif;
+            text-transform: uppercase;
+        }
+
+        .about-text, .instruction-box, .subtitle, .terms-text, .input-box, .text-normal {
+            text-transform: none;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background-color: #000;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 420px;
+            height: 100vh;
+            background-color: #f2f6f0;
+            position: relative;
+            overflow: hidden;
+            /* Efek Border Bergerak di pinggir layar */
+            border: 3px solid transparent;
+            background-image: linear-gradient(#f2f6f0, #f2f6f0), 
+                              linear-gradient(90deg, var(--theme-color), #fff, var(--theme-color));
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+            animation: borderGlow 3s linear infinite;
+        }
+
+        @keyframes borderGlow {
+            0% { background-position: 0 0; }
+            100% { background-position: 100% 0; }
+        }
+
+        /* ============ PINTU 3D ============ */
+        .door-scene {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 100; perspective: 2000px;
+            background: radial-gradient(circle, #112 0%, #000 100%);
+        }
+        .door-wrapper {
+            position: absolute; top: 0; width: 50%; height: 100%;
+            background: linear-gradient(135deg, #0a6b3b 0%, #044d29 50%, #022e18 100%);
+            border: 8px solid #022e18;
+            box-shadow: inset 0 0 60px rgba(0,0,0,0.8), 0 0 30px rgba(0,255,127,0.3);
+            transition: transform 1.8s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer; transform-style: preserve-3d; overflow: hidden;
+        }
+        .door-wrapper::before {
+            content: ''; position: absolute; top: 5%; bottom: 5%; left: 5%; right: 5%;
+            border: 2px solid rgba(0,255,127,0.2); border-radius: 8px;
+            box-shadow: inset 0 0 20px rgba(0,255,127,0.1);
+        }
+        .door-wrapper::after {
+            content: ''; position: absolute; top: 10px; bottom: 10px; left: 10px; right: 10px;
+            border: 2px dashed rgba(0,255,127,0.4); border-radius: 5px;
+        }
+        .handle {
+            position: absolute; top: 50%; width: 30px; height: 80px;
+            background: linear-gradient(to right, #bbb, #fff, #999);
+            border-radius: 15px; transform: translateY(-50%);
+            box-shadow: 0 0 15px rgba(255,255,255,0.8), inset -2px -2px 5px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+        .handle::after {
+            content: ''; position: absolute; top: 50%; width: 20px; height: 20px;
+            background: #11ab4d; border-radius: 50%; transform: translateY(-50%);
+            box-shadow: 0 0 10px #00ff7f;
+        }
+        .door-left { left: 0; transform-origin: left center; border-radius: 0 10px 10px 0; border-right: 2px solid #000; }
+        .door-left .handle { right: 10px; }
+        .door-left .handle::after { right: 5px; }
+        .door-right { right: 0; transform-origin: right center; border-radius: 10px 0 0 10px; border-left: 2px solid #000; }
+        .door-right .handle { left: 10px; }
+        .door-right .handle::after { left: 5px; }
+        .door-scene.open .door-left { transform: rotateY(-130deg); }
+        .door-scene.open .door-right { transform: rotateY(130deg); }
+
+        /* ============ VERIFY ============ */
+        .verify-scene {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 95; background: linear-gradient(180deg, #051416 0%, #0a2e27 100%);
+            display: flex; flex-direction: column; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.5s;
+        }
+        .verify-scene.active { opacity: 1; pointer-events: auto; }
+        .top-bar { width: 100%; display: flex; justify-content: flex-end; padding: 20px 25px; margin-top: 10px; }
+        .biometric-badge {
+            border: 1px solid rgba(0,255,127,0.3); padding: 8px 15px; border-radius: 8px;
+            display: flex; align-items: center; gap: 8px; color: #00ff7f; font-size: 10px;
+            letter-spacing: 1px; background: rgba(0,255,127,0.05);
+        }
+        .green-dot { width: 8px; height: 8px; background-color: #00ff7f; border-radius: 50%; box-shadow: 0 0 8px #00ff7f; }
+        .title-section { text-align: center; margin-top: 20px; }
+        .verify-title { color: #00ff7f; font-size: 22px; letter-spacing: 2px; text-shadow: 0 0 10px rgba(0,255,127,0.5); }
+        .title-divider {
+            width: 80px; height: 1px; background: linear-gradient(90deg, transparent, #00ff7f, transparent);
+            margin: 15px auto; position: relative;
+        }
+        .title-divider::after {
+            content: ''; position: absolute; top: -3px; left: 50%; transform: translateX(-50%);
+            width: 6px; height: 6px; background: #00ff7f; border-radius: 50%; box-shadow: 0 0 8px #00ff7f;
+        }
+        .instruction-box {
+            border: 1px solid rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 8px;
+            font-size: 12px; color: #8899a6; font-style: italic; background: rgba(0,0,0,0.2);
+            margin-bottom: 40px; text-align: center; letter-spacing: 0.5px;
+        }
+        .fingerprint-area {
+            position: relative; width: 260px; height: 260px;
+            display: flex; justify-content: center; align-items: center; margin-bottom: 40px;
+        }
+        .corner { position: absolute; width: 20px; height: 20px; border-color: #00ff7f; border-style: solid; opacity: 0.6; }
+        .corner.tl { top: 0; left: 0; border-width: 2px 0 0 2px; }
+        .corner.tr { top: 0; right: 0; border-width: 2px 2px 0 0; }
+        .corner.bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; }
+        .corner.br { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
+        .dashed-ring { position: absolute; width: 220px; height: 220px; border: 1px dashed rgba(0,255,127,0.3); border-radius: 50%; }
+        .center-touch-area {
+            position: relative; width: 200px; height: 200px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 10;
+        }
+        .progress-ring {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%;
+            background: conic-gradient(#00ff7f 0%, rgba(0,255,127,0.1) 0%);
+            display: flex; justify-content: center; align-items: center; transition: background 0.1s linear;
+        }
+        .inner-circle {
+            width: 180px; height: 180px; background: #08211c; border-radius: 50%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8); position: relative; transition: transform 0.1s;
+        }
+        .center-touch-area:active .inner-circle { transform: scale(0.95); }
+        .fingerprint-icon {
+            width: 80px; height: 80px; fill: #00e673;
+            filter: drop-shadow(0 0 10px rgba(0,230,115,0.5)); transition: transform 0.2s, fill 0.3s;
+        }
+        .percentage-box {
+            position: absolute; bottom: 20px; border: 1px solid rgba(0,255,127,0.3);
+            padding: 5px 15px; border-radius: 8px; background: rgba(0,0,0,0.5);
+            display: flex; align-items: center; gap: 5px;
+        }
+        .percentage-box svg { width: 12px; height: 12px; fill: #00ff7f; }
+        .percentage-text { color: #fff; font-size: 14px; font-weight: bold; font-family: 'Arial', sans-serif; }
+        .action-buttons { display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%; margin-top: 10px; }
+        .btn-3d {
+            background-color: #0c9e45; color: white; border: 2px solid #111; border-radius: 8px;
+            padding: 15px 20px; font-size: 14px; letter-spacing: 1px; cursor: pointer;
+            box-shadow: 4px 4px 0px 0px #044d29, 4px 4px 0px 2px #111;
+            transition: transform 0.1s, box-shadow 0.1s;
+            display: flex; justify-content: center; align-items: center; gap: 10px; width: 200px;
+        }
+        .btn-cancel {
+            background-color: transparent; color: #8899a6;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 4px 4px 0px 0px rgba(255,255,255,0.1);
+            width: 150px; margin-top: 30px;
+        }
+        .btn-cancel:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px 0px rgba(255,255,255,0.1); }
+        .security-badges { display: flex; gap: 10px; }
+        .badge {
+            border: 1px solid rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 6px;
+            font-size: 10px; color: #667; display: flex; align-items: center; gap: 5px;
+            font-family: 'Arial', sans-serif;
+        }
+        .success-notif {
+            position: absolute; top: -100px; left: 50%; transform: translateX(-50%);
+            background-color: #0c9e45; color: white; padding: 15px 30px; border-radius: 10px;
+            font-size: 15px; box-shadow: 0 5px 20px rgba(0,255,127,0.4);
+            transition: top 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 200; display: flex; align-items: center; gap: 10px;
+            border: 2px solid #fff; white-space: nowrap;
+        }
+        .success-notif.show { top: 40px; }
+
+        /* ============ MAIN MENU ============ */
+        .main-menu-scene {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #f2f6f0; overflow-y: auto; overflow-x: hidden;
+            opacity: 0; pointer-events: none; transition: opacity 0.6s ease-in-out; z-index: 80;
+        }
+        .main-menu-scene.active { opacity: 1; pointer-events: auto; }
+        .banner-container { width: 100%; height: 260px; position: relative; }
+        .banner-container img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+        .banner-container::after {
+            content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 60px;
+            background: linear-gradient(to bottom, rgba(242,246,240,0) 0%, rgba(242,246,240,1) 100%);
+        }
+        .content-container { padding: 10px 20px 30px 20px; display: flex; flex-direction: column; gap: 15px; }
+        .title { font-size: 32px; letter-spacing: 2px; margin-bottom: 0; display: flex; align-items: center; }
+        .title-dark { color: #1a1a1a; }
+        .title-green { color: #11ab4d; }
+        .subtitle { font-size: 11px; color: #555; margin-top: -5px; margin-bottom: 10px; letter-spacing: 1px; }
+        .box-3d {
+            background-color: #ffffff; border: 3px solid #111; border-radius: 16px; padding: 20px;
+            box-shadow: 4px 5px 0px 0px #044d29, 4px 5px 0px 3px #111; position: relative;
+        }
+        .about-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+        .info-icon {
+            width: 18px; height: 18px; border-radius: 50%; border: 2px solid #11ab4d;
+            color: #11ab4d; display: flex; justify-content: center; align-items: center;
+            font-size: 12px; font-weight: bold;
+        }
+        .about-header h2 { font-size: 14px; color: #111; letter-spacing: 1px; }
+        .about-text { font-size: 12.5px; line-height: 1.6; color: #444; text-align: justify; }
+        .btn-signin-main {
+            background-color: #0c9e45; color: white; border: 3px solid #111; border-radius: 12px;
+            padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer; box-shadow: 4px 5px 0px 0px #044d29, 4px 5px 0px 3px #111;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .btn-signin-main:active { transform: translate(4px, 5px); box-shadow: 0px 0px 0px 0px #044d29, 0px 0px 0px 0px #111; }
+        .btn-signin-left { display: flex; align-items: center; gap: 15px; }
+        .btn-signin-left svg { width: 24px; height: 24px; fill: none; stroke: white; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        .btn-signin-main span { font-size: 16px; letter-spacing: 1px; }
+        .chevron-right { font-weight: bold; font-size: 20px; color: rgba(255,255,255,0.7); }
+        .button-row { display: flex; gap: 15px; }
+        .btn-secondary {
+            flex: 1; background-color: #11ab4d; color: white; border: 3px solid #111; border-radius: 12px;
+            padding: 15px 10px; display: flex; align-items: center; justify-content: center; gap: 10px;
+            cursor: pointer; box-shadow: 4px 5px 0px 0px #044d29, 4px 5px 0px 3px #111;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .btn-secondary:active { transform: translate(4px, 5px); box-shadow: 0px 0px 0px 0px #044d29, 0px 0px 0px 0px #111; }
+        .btn-secondary svg { width: 18px; height: 18px; fill: white; }
+        .btn-secondary span { font-size: 12px; letter-spacing: 1px; }
+        .footer-box { margin-top: 10px; text-align: center; padding: 15px; }
+        .footer-title { color: #11ab4d; font-size: 15px; margin-bottom: 5px; letter-spacing: 1px; }
+        .footer-copyright { font-size: 9px; color: #666; letter-spacing: 0.5px; }
+
+        /* ============ LOGIN FORM ============ */
+        .login-form-scene {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #f2f6f0; overflow-y: auto; overflow-x: hidden;
+            opacity: 0; pointer-events: none; transition: opacity 0.6s ease-in-out;
+            z-index: 150; display: flex; flex-direction: column; align-items: center; padding: 20px;
+        }
+        .login-form-scene.active { opacity: 1; pointer-events: auto; }
+        .btn-back-login {
+            position: absolute; top: 20px; left: 20px; width: 40px; height: 40px;
+            background: #fff; border: 2px solid #111; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 2px 2px 0px 0px #111; cursor: pointer; z-index: 10;
+        }
+        .btn-back-login:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px 0px #111; }
+        .btn-back-login svg { width: 20px; height: 20px; fill: #111; }
+        .logo-container {
+            margin-top: 60px; margin-bottom: 20px; text-align: center;
+            background-color: #f2f6f0;
+        }
+        .logo-container img {
+            width: 200px; height: auto; object-fit: contain;
+            background-color: #f2f6f0;
+            mix-blend-mode: multiply;
+        }
+        .login-title { font-size: 20px; color: #111; text-align: center; margin-bottom: 5px; line-height: 1.2; }
+        .login-subtitle { font-size: 12px; color: #666; text-align: center; margin-bottom: 35px; letter-spacing: 0.5px; }
+        .form-group { width: 100%; position: relative; margin-bottom: 20px; }
+        .input-box {
+            width: 100%; background-color: #fff; border: 2px solid #111; border-radius: 12px;
+            padding: 15px 15px 15px 45px; font-size: 14px; color: #333;
+            box-shadow: 3px 4px 0px 0px #111; outline: none;
+        }
+        .input-box:focus { border-color: #11ab4d; box-shadow: 3px 4px 0px 0px #11ab4d; }
+        .input-box::placeholder { color: #999; }
+        .input-icon {
+            position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
+            width: 20px; height: 20px; fill: none; stroke: #555; stroke-width: 2;
+        }
+        .toggle-password {
+            position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
+            width: 20px; height: 20px; fill: none; stroke: #555; stroke-width: 2;
+            cursor: pointer; z-index: 5;
+        }
+        .btn-submit {
+            width: 100%; background-color: #0c9e45; color: white; border: 2px solid #111;
+            border-radius: 12px; padding: 16px; font-size: 16px; letter-spacing: 1px;
+            cursor: pointer; box-shadow: 3px 4px 0px 0px #111;
+            transition: transform 0.1s, box-shadow 0.1s; margin-top: 10px; margin-bottom: 20px;
+        }
+        .btn-submit:active { transform: translate(3px, 4px); box-shadow: 0px 0px 0px 0px #111; }
+        .btn-buy-access {
+            width: 100%; background-color: #fff; color: #111; border: 2px solid #111;
+            border-radius: 12px; padding: 15px; font-size: 13px; letter-spacing: 1px;
+            cursor: pointer; box-shadow: 3px 4px 0px 0px #111;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+            transition: transform 0.1s, box-shadow 0.1s; margin-bottom: 40px;
+        }
+        .btn-buy-access:active { transform: translate(3px, 4px); box-shadow: 0px 0px 0px 0px #111; }
+        .btn-buy-access svg { width: 20px; height: 20px; fill: #111; }
+        .terms-text {
+            font-size: 10px; color: #888; text-align: center;
+            margin-top: auto; margin-bottom: 20px; line-height: 1.5;
+        }
+        .error-msg {
+            color: #d32f2f; font-size: 11px; margin-top: -12px; margin-bottom: 10px;
+            text-align: center; display: none; font-family: 'Arial', sans-serif;
+        }
+        .error-msg.show { display: block; }
+
+        /* ============ LOADING VIDEO ============ */
+        .loading-video-scene {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 500; display: none;
+            justify-content: center; align-items: center; overflow: hidden;
+        }
+        .loading-video-scene.active { display: flex; }
+        .loading-video-scene video {
+            position: absolute; top: 50%; left: 50%;
+            min-width: 100%; min-height: 100%;
+            width: auto; height: auto;
+            transform: translate(-50%, -50%);
+            object-fit: cover;
+        }
+        .loading-overlay-text {
+            position: relative; z-index: 10; text-align: center;
+            opacity: 0; transition: opacity 1s ease-in;
+            pointer-events: none;
+        }
+        .loading-overlay-text.show { opacity: 1; }
+        .loading-overlay-text h1 {
+            font-family: 'Aquire', 'Michroma', sans-serif;
+            font-size: 28px; letter-spacing: 4px;
+            color: rgba(255, 255, 255, 0.35);
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+            margin-bottom: 15px;
+        }
+        .loading-overlay-text p {
+            font-family: 'Aquire', 'Michroma', sans-serif;
+            font-size: 10px; letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.25);
+        }
+        .btn-skip {
+            position: absolute; top: 20px; right: 20px; z-index: 20;
+            background: rgba(0, 0, 0, 0.5); color: white;
+            border: 2px solid rgba(255,255,255,0.5); border-radius: 8px;
+            padding: 10px 20px; font-size: 12px; letter-spacing: 1px;
+            cursor: pointer; backdrop-filter: blur(5px);
+        }
+        .btn-skip:active { background: rgba(255,255,255,0.2); }
+
+        /* ==========================================================================
+           DASHBOARD BARU (Tema Putih)
+           ========================================================================== */
+        .dashboard-scene {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--theme-darker); /* Background utama */
+            opacity: 0; pointer-events: none; transition: opacity 0.6s ease-in-out;
+            z-index: 400; display: flex; flex-direction: column;
+        }
+        .dashboard-scene.active { opacity: 1; pointer-events: auto; }
+
+        /* Header Fixed */
+        .dash-header-top {
+            position: absolute; top: 0; left: 0; width: 100%; height: 80px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 20px 10px 20px;
+            background-color: var(--theme-darker); z-index: 410;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        .dash-menu-icon, .dash-profile-icon, .dash-bell-icon {
+            width: 42px; height: 42px; border-radius: 50%;
+            background: var(--theme-dark); border: 1px solid var(--theme-border);
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; position: relative;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .dash-menu-icon:active, .dash-profile-icon:active, .dash-bell-icon:active { transform: scale(0.95); }
+        .dash-menu-icon svg, .dash-profile-icon svg, .dash-bell-icon svg {
+            width: 20px; height: 20px; fill: none; stroke: var(--theme-text); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+        }
+        .dash-bell-icon::after {
+            content: ''; position: absolute; top: 10px; right: 12px;
+            width: 6px; height: 6px; background: #ff4444; border-radius: 50%;
+            box-shadow: 0 0 5px #ff4444;
+        }
+        .dash-title-logo {
+            font-size: 20px; color: var(--theme-color);
+            letter-spacing: 2px; text-shadow: 0 0 10px var(--theme-glow);
+            text-align: center; flex: 1; font-weight: bold;
+        }
+
+        /* Scrollable Area Dashboard */
+        .dash-scroll-area {
+            position: absolute; top: 80px; bottom: 70px;
+            left: 0; width: 100%; overflow-y: auto; overflow-x: hidden;
+            padding: 15px 20px;
+            display: flex; flex-direction: column; gap: 15px;
+        }
+        .dash-scroll-area::-webkit-scrollbar { display: none; }
+        .dash-scroll-area { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Card Thank To */
+        .dash-card-thank {
+            background: var(--theme-dark); border: 1px solid var(--theme-border); border-radius: 16px;
+            padding: 15px 15px 15px 85px;
+            position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .clock-mini-wrap {
+            position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+            width: 65px; height: 65px;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .clock-mini-svg { width: 65px; height: 65px; }
+        .clock-mini-svg circle { fill: none; stroke: var(--theme-border); stroke-width: 1.5; }
+        .clock-mini-svg line { stroke: var(--theme-text); stroke-width: 2; stroke-linecap: round; }
+        .clock-mini-svg text { fill: var(--theme-text); font-size: 6px; font-family: 'Arial', sans-serif; text-anchor: middle; dominant-baseline: middle; }
+        
+        .thank-title { font-size: 9px; color: var(--theme-color); letter-spacing: 1px; margin-bottom: 8px; font-weight: bold; }
+        .thank-dev { display: flex; flex-direction: column; gap: 8px; }
+        .thank-dev-item { display: flex; justify-content: space-between; align-items: center; }
+        .thank-dev-name { font-size: 11px; color: var(--theme-text); letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px; font-weight: bold; }
+        .thank-dev-role { font-size: 8px; color: var(--theme-subtext); letter-spacing: 0.5px; margin-top: 2px; }
+        .verified-icon { width: 12px; height: 12px; fill: #1da1f2; display: inline-block; }
+
+        /* Kontrol Kanan Atas */
+        .dash-top-controls {
+            position: absolute; right: 15px; top: 15px;
+            display: flex; flex-direction: column; gap: 10px; align-items: center;
+        }
+        .ctrl-btn {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--theme-darker); border: 1px solid var(--theme-border);
+            display: flex; justify-content: center; align-items: center; cursor: pointer;
+        }
+        .ctrl-btn svg { width: 16px; height: 16px; fill: none; stroke: var(--theme-text); stroke-width: 2; }
+        
+        .toggle-switch {
+            width: 36px; height: 20px; background: #ccc; border-radius: 10px;
+            position: relative; cursor: pointer; transition: background 0.3s;
+        }
+        .toggle-switch::after {
+            content: ''; position: absolute; top: 2px; left: 2px;
+            width: 16px; height: 16px; background: #fff; border-radius: 50%;
+            transition: transform 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .toggle-switch.on { background: var(--theme-color); }
+        .toggle-switch.on::after { transform: translateX(16px); }
+        .toggle-label { font-size: 7px; color: var(--theme-subtext); margin-top: 3px; }
+
+        .btn-music {
+            width: 42px; height: 42px; border-radius: 12px;
+            background: var(--theme-color); border: 2px solid var(--theme-color);
+            display: flex; justify-content: center; align-items: center; cursor: pointer;
+            box-shadow: 0 4px 10px var(--theme-glow); margin-top: 5px;
+        }
+        .btn-music svg { width: 20px; height: 20px; fill: #fff; }
+
+        /* UID Section */
+        .dash-uid-section {
+            padding: 15px; border: 1px solid var(--theme-border); border-radius: 12px;
+            background: var(--theme-dark); position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .uid-label-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .uid-label { font-size: 9px; color: var(--theme-color); letter-spacing: 1px; font-weight: bold; }
+        .uid-badge {
+            background: rgba(17,171,77,0.1); border: 1px solid var(--theme-color);
+            padding: 2px 6px; border-radius: 4px; font-size: 8px; color: var(--theme-color);
+            display: flex; align-items: center; gap: 3px; font-weight: bold;
+        }
+        .uid-badge svg { width: 8px; height: 8px; fill: var(--theme-color); }
+        .uid-text-row { display: flex; justify-content: space-between; align-items: center; }
+        .uid-text { font-family: monospace; font-size: 13px; color: var(--theme-text); letter-spacing: 1px; }
+        .btn-copy-uid {
+            background: var(--theme-darker); border: 1px solid var(--theme-border); border-radius: 6px;
+            width: 32px; height: 32px; display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: background 0.2s;
+        }
+        .btn-copy-uid:active { background: var(--theme-border); }
+        .btn-copy-uid svg { width: 14px; height: 14px; fill: none; stroke: var(--theme-text); stroke-width: 2; }
+        .uid-footer { font-size: 8px; color: var(--theme-subtext); margin-top: 8px; letter-spacing: 0.5px; }
+
+        /* Profile Card dengan Rantai */
+        .profile-card-container {
+            margin: 5px 0; padding: 4px; position: relative;
+            border-radius: 24px;
+            border: 4px solid transparent;
+            background-clip: padding-box;
+            background-image: 
+                radial-gradient(circle at 10px 10px, #888 3px, transparent 4px),
+                radial-gradient(circle at calc(100% - 10px) 10px, #888 3px, transparent 4px),
+                radial-gradient(circle at 10px calc(100% - 10px), #888 3px, transparent 4px),
+                radial-gradient(circle at calc(100% - 10px) calc(100% - 10px), #888 3px, transparent 4px);
+            background-repeat: no-repeat;
+            box-shadow: 0 4px 15px var(--theme-glow);
+        }
+        .chain-frame {
+            position: absolute; top: -8px; left: -8px; right: -8px; bottom: -8px;
+            border-radius: 30px; border: 10px solid transparent;
+            background: repeating-linear-gradient(45deg, #999 0, #999 8px, transparent 8px, transparent 16px) border-box;
+            -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor; mask-composite: exclude;
+            pointer-events: none; z-index: 10;
+        }
+        .profile-card {
+            background: linear-gradient(135deg, var(--theme-dark) 0%, #eef5ef 100%);
+            border-radius: 20px; padding: 20px; position: relative; overflow: hidden;
+            min-height: 160px; display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .profile-bg-img {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; opacity: 0.1; pointer-events: none; z-index: 1;
+        }
+        .profile-content { position: relative; z-index: 2; }
+        .profile-top-row { display: flex; justify-content: space-between; align-items: flex-start; }
+        .welcome-text {
+            font-size: 10px; color: var(--theme-subtext); letter-spacing: 1px;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .welcome-text svg { width: 12px; height: 12px; fill: var(--theme-color); }
+        .digital-clock-box {
+            background: var(--theme-darker); border: 1px solid var(--theme-border); border-radius: 8px;
+            padding: 5px 10px; text-align: center; box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        }
+        .digital-clock-time {
+            font-family: 'Orbitron', 'Aquire', sans-serif;
+            font-size: 20px; color: var(--theme-text); letter-spacing: 2px; font-weight: bold;
+        }
+        .digital-clock-date { font-size: 8px; color: var(--theme-subtext); margin-top: 2px; }
+        
+        .greeting-name {
+            font-size: 24px; color: var(--theme-text); margin-top: 20px; letter-spacing: 2px; font-weight: bold;
+        }
+        .greeting-name span { color: var(--theme-color); }
+
+        .profile-badge-row {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 15px; background: rgba(255,255,255,0.8); padding: 8px 12px;
+            border-radius: 8px; border: 1px solid var(--theme-border);
+        }
+        .role-badge {
+            display: flex; align-items: center; gap: 5px;
+            font-size: 9px; color: var(--theme-color); letter-spacing: 1px; font-weight: bold;
+        }
+        .role-badge svg { width: 10px; height: 10px; fill: currentColor; }
+        .exp-text { font-size: 9px; color: var(--theme-subtext); display: flex; align-items: center; gap: 5px; }
+        .exp-text svg { width: 10px; height: 10px; stroke: var(--theme-subtext); fill: none; stroke-width: 2; }
+
+        /* Grid Menu Box (Battery, Test) */
+        .dash-grid-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .dash-box {
+            background: var(--theme-dark); border: 1px solid var(--theme-border); border-radius: 16px;
+            padding: 15px; display: flex; flex-direction: column; gap: 10px;
+            position: relative; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .box-icon-wrap {
+            width: 36px; height: 36px; border-radius: 10px;
+            display: flex; justify-content: center; align-items: center;
+            background: var(--theme-darker);
+        }
+        .box-icon-wrap svg { width: 18px; height: 18px; fill: none; stroke: var(--theme-color); stroke-width: 2; }
+        .box-label { font-size: 9px; color: var(--theme-subtext); letter-spacing: 1px; margin-top: 5px; }
+        .box-value { font-size: 14px; color: var(--theme-text); letter-spacing: 1px; font-weight: bold; }
+        .box-test-btn {
+            background: var(--theme-darker); border: 1px solid var(--theme-border); border-radius: 6px;
+            padding: 5px 10px; font-size: 8px; color: var(--theme-text);
+            cursor: pointer; margin-top: 5px; text-align: center;
+        }
+
+        /* Menu Tambahan (Device, Manage Sender, dll) */
+        .dash-extra-menu { display: flex; flex-direction: column; gap: 10px; }
+        .extra-menu-btn {
+            display: flex; align-items: center; gap: 15px;
+            background: var(--theme-dark); border: 1px solid var(--theme-border);
+            border-radius: 12px; padding: 15px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .extra-menu-btn:active { background: var(--theme-darker); }
+        .extra-menu-icon {
+            width: 40px; height: 40px; border-radius: 10px;
+            background: rgba(17,171,77,0.1); display: flex; justify-content: center; align-items: center;
+        }
+        .extra-menu-icon svg { width: 22px; height: 22px; fill: none; stroke: var(--theme-color); stroke-width: 2; }
+        .extra-menu-text { display: flex; flex-direction: column; gap: 3px; }
+        .extra-menu-title { font-size: 12px; color: var(--theme-text); letter-spacing: 1px; font-weight: bold; }
+        .extra-menu-sub { font-size: 8px; color: var(--theme-subtext); }
+
+        /* FAB Home */
+        .fab-home {
+            position: absolute; bottom: 85px; left: 20px;
+            width: 55px; height: 55px; border-radius: 50%;
+            background: var(--theme-color); border: 3px solid var(--theme-dark);
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 4px 15px var(--theme-glow);
+            z-index: 450; cursor: pointer;
+        }
+        .fab-home:active { transform: scale(0.95); }
+        .fab-home svg { width: 24px; height: 24px; fill: #fff; }
+
+        /* Bottom Navigation Fixed */
+        .bottom-nav {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 70px;
+            background: var(--theme-dark); border-top: 1px solid var(--theme-border);
+            display: flex; justify-content: space-around; align-items: center;
+            padding-bottom: 10px; z-index: 450;
+            border-top-left-radius: 20px; border-top-right-radius: 20px;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+        }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+            cursor: pointer; opacity: 0.5; transition: opacity 0.2s;
+        }
+        .nav-item.active { opacity: 1; }
+        .nav-item svg { width: 20px; height: 20px; fill: none; stroke: var(--theme-text); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        .nav-item span { font-size: 7px; color: var(--theme-text); letter-spacing: 0.5px; }
+        .nav-item.active svg { fill: var(--theme-glow); stroke: var(--theme-color); }
+        .nav-item.active span { color: var(--theme-color); font-weight: bold; }
+
+        /* =========================================
+           SIDEBAR MENU (Garis Tiga)
+           ========================================= */
+        .sidebar-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4); z-index: 600; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .sidebar-overlay.active { opacity: 1; pointer-events: auto; }
+        
+        .sidebar {
+            position: absolute; top: 0; left: -280px; width: 280px; height: 100%;
+            background: var(--theme-dark); z-index: 610; transition: left 0.3s ease;
+            display: flex; flex-direction: column; padding: 20px;
+            overflow-y: auto;
+        }
+        .sidebar.open { left: 0; }
+        
+        .sidebar-profile {
+            display: flex; align-items: center; gap: 15px; margin-bottom: 25px; margin-top: 10px;
+        }
+        .sidebar-avatar {
+            width: 60px; height: 60px; border-radius: 50%;
+            background: var(--theme-darker); display: flex; justify-content: center; align-items: center;
+            border: 2px solid var(--theme-border);
+        }
+        .sidebar-avatar svg { width: 30px; height: 30px; fill: var(--theme-subtext); }
+        .sidebar-info h3 { font-size: 14px; color: var(--theme-text); display: flex; align-items: center; gap: 5px; }
+        .sidebar-info .verified-icon { width: 14px; height: 14px; fill: #1da1f2; }
+        .sidebar-role {
+            font-size: 9px; color: #fff; background: #ffaa00;
+            padding: 3px 8px; border-radius: 10px; display: inline-block; margin-top: 5px;
+            font-weight: bold;
+        }
+        
+        .sidebar-divider { width: 100%; height: 1px; background: var(--theme-border); margin-bottom: 20px; }
+        
+        .sidebar-menu { display: flex; flex-direction: column; gap: 20px; flex: 1; }
+        .sidebar-item {
+            display: flex; align-items: center; gap: 15px; cursor: pointer;
+            color: var(--theme-text); font-size: 11px; letter-spacing: 1px;
+        }
+        .sidebar-item svg { width: 18px; height: 18px; fill: none; stroke: var(--theme-text); stroke-width: 2; }
+        .sidebar-item:active { opacity: 0.7; }
+        .sidebar-item.logout { color: #d32f2f; margin-top: 20px; }
+        .sidebar-item.logout svg { stroke: #d32f2f; }
+        
+        .sidebar-section-title {
+            font-size: 9px; color: var(--theme-subtext); letter-spacing: 2px; margin-top: 15px; margin-bottom: 5px;
+        }
+        
+        /* Color Picker di Sidebar */
+        .color-picker-row { display: flex; align-items: center; gap: 15px; cursor: pointer; }
+        .color-picker-circle {
+            width: 24px; height: 24px; border-radius: 50%;
+            background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red);
+            border: 2px solid var(--theme-border);
+        }
+
+        /* Modal Color Picker */
+        .modal-theme {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 700;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .modal-theme.active { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            background: var(--theme-dark); border: 2px solid var(--theme-border); border-radius: 16px;
+            padding: 25px; width: 80%; text-align: center;
+        }
+        .modal-content h3 { color: var(--theme-text); font-size: 14px; margin-bottom: 20px; letter-spacing: 1px; }
+        .theme-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+        .theme-color-btn {
+            width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+            border: 3px solid transparent; transition: transform 0.2s;
+        }
+        .theme-color-btn:active { transform: scale(0.9); }
+        .theme-color-btn.selected { border-color: var(--theme-text); }
+        
+        .btn-close-modal {
+            background: var(--theme-darker); color: var(--theme-text); border: 1px solid var(--theme-border);
+            padding: 10px 20px; border-radius: 8px; font-size: 12px; cursor: pointer; letter-spacing: 1px;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.9); z-index: 800;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .loading-overlay.active { opacity: 1; pointer-events: auto; }
+        .spinner {
+            width: 40px; height: 40px; border: 4px solid rgba(0,0,0,0.1);
+            border-top: 4px solid var(--theme-color); border-radius: 50%;
+            animation: spin 1s linear infinite; margin-bottom: 15px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-text { color: var(--theme-text); font-size: 12px; letter-spacing: 2px; font-weight: bold; }
+
+        /* Toast Notif */
+        .toast-msg {
+            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+            background: var(--theme-color); color: #fff; padding: 10px 20px;
+            border-radius: 20px; font-size: 11px; font-weight: bold;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+            z-index: 999; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .toast-msg.show { opacity: 1; }
+
+        /* =========================================
+           DEV PANEL STYLING
+           ========================================= */
+        .dev-panel-scene {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--theme-darker); z-index: 550;
+            display: flex; flex-direction: column;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .dev-panel-scene.active { opacity: 1; pointer-events: auto; }
+        
+        .dev-header {
+            display: flex; align-items: center; padding: 20px;
+            background: var(--theme-dark); border-bottom: 1px solid var(--theme-border);
+        }
+        .dev-back-btn {
+            background: none; border: none; cursor: pointer; margin-right: 15px;
+        }
+        .dev-back-btn svg { width: 24px; height: 24px; fill: none; stroke: var(--theme-text); stroke-width: 2; }
+        .dev-title { font-size: 16px; color: var(--theme-text); font-weight: bold; letter-spacing: 1px; flex: 1; text-align: center; margin-right: 39px; }
+        
+        .dev-content { padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; flex: 1;}
+        
+        .dev-btn {
+            background: var(--theme-dark); border: 2px solid var(--theme-border); border-radius: 12px;
+            padding: 18px; display: flex; align-items: center; gap: 15px;
+            cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .dev-btn:active { background: var(--theme-darker); }
+        .dev-btn svg { width: 24px; height: 24px; fill: none; stroke: var(--theme-color); stroke-width: 2; }
+        .dev-btn span { font-size: 14px; color: var(--theme-text); font-weight: bold; letter-spacing: 1px; }
+        
+        /* Create Account Form */
+        .dev-form-group { margin-bottom: 15px; }
+        .dev-form-group label { display: block; font-size: 10px; color: var(--theme-subtext); margin-bottom: 5px; letter-spacing: 1px; }
+        .dev-input, .dev-select {
+            width: 100%; padding: 12px; border: 2px solid var(--theme-border); border-radius: 8px;
+            background: var(--theme-dark); color: var(--theme-text); font-size: 13px; outline: none;
+        }
+        .dev-input:focus, .dev-select:focus { border-color: var(--theme-color); }
+        .dev-submit-btn {
+            width: 100%; padding: 15px; background: var(--theme-color); color: #fff;
+            border: none; border-radius: 8px; font-size: 14px; font-weight: bold;
+            cursor: pointer; margin-top: 10px; box-shadow: 0 4px 10px var(--theme-glow);
+        }
+        .dev-submit-btn:active { transform: scale(0.98); }
+
+        /* Delete Account List */
+        .user-list { display: flex; flex-direction: column; gap: 10px; }
+        .user-card {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--theme-dark); border: 1px solid var(--theme-border);
+            border-radius: 10px; padding: 15px;
+        }
+        .user-info p { font-size: 12px; color: var(--theme-text); font-weight: bold; margin-bottom: 3px;}
+        .user-info span { font-size: 9px; color: var(--theme-subtext); }
+        .btn-delete-user {
+            background: #ff4444; color: #fff; border: none; border-radius: 6px;
+            padding: 8px 12px; font-size: 10px; cursor: pointer;
+        }
+        .btn-delete-user:active { background: #cc0000; }
+
+        /* Firebase Loading Spinner */
+        .fb-loader {
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            padding: 40px 0;
+        }
+        .fb-loader.active { display: flex; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+
+        <!-- PINTU 3D -->
+        <div class="door-scene" id="doorScene" onclick="openDoors()">
+            <div class="door-wrapper door-left"><div class="handle"></div></div>
+            <div class="door-wrapper door-right"><div class="handle"></div></div>
+        </div>
+
+        <!-- VERIFIKASI SIDIK JARI -->
+        <div class="verify-scene" id="verifyScene">
+            <div class="top-bar"><div class="biometric-badge"><div class="green-dot"></div>BIOMETRIC</div></div>
+            <div class="title-section">
+                <h1 class="verify-title">VERIFIKASI SIDIK JARI</h1>
+                <div class="title-divider"></div>
+                <div class="instruction-box">Tekan & tahan ikon sidik jari sampai 100%</div>
+            </div>
+            <div class="fingerprint-area">
+                <div class="corner tl"></div><div class="corner tr"></div>
+                <div class="corner bl"></div><div class="corner br"></div>
+                <div class="dashed-ring"></div>
+                <div class="center-touch-area" id="centerTouchArea">
+                    <div class="progress-ring" id="progressRing">
+                        <div class="inner-circle">
+                            <svg class="fingerprint-icon" id="fingerprintIcon" viewBox="0 0 24 24">
+                                <path d="M12 2C9.243 2 6.782 3.092 4.929 4.929A1 1 0 006.343 6.343C7.836 4.849 9.812 4 12 4c4.411 0 8 3.589 8 8 0 2.188-.849 4.164-2.343 5.657a1 1 0 101.414 1.414C20.908 17.217 22 14.757 22 12c0-5.514-4.486-10-10-10zM4 12c0 1.01.193 1.98.554 2.879a1 1 0 101.844-.772A7.93 7.93 0 016 12c0-3.309 2.691-6 6-6s6 2.691 6 6a5.986 5.986 0 01-1.757 4.243 1 1 0 101.414 1.414A7.986 7.986 0 0020 12c0-4.411-3.589-8-8-8s-8 3.589-8 8zm8-2c-1.103 0-2 .897-2 2 0 1.103.897 2 2 2s2-.897 2-2c0-1.103-.897-2-2-2zm-4 2c0-2.206 1.794-4 4-4s4 1.794 4 4c0 1.103-.448 2.104-1.172 2.828a1 1 0 101.414 1.414A5.978 5.978 0 0016 12c0-2.206-1.794-4-4-4s-4 1.794-4 4c0 .528.212 1.033.586 1.414a1 1 0 101.414-1.414A1.986 1.986 0 018 12z"/>
+                            </svg>
+                            <div class="percentage-box">
+                                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 9h-2V7h-2v5H6v2h2v5h2v-5h2v-2z"/></svg>
+                                <span class="percentage-text" id="percentageText">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="action-buttons">
+                <div class="security-badges">
+                    <div class="badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#667" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>AES-256</div>
+                    <div class="badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#667" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>TRUSTED</div>
+                </div>
+                <button class="btn-3d btn-cancel" onclick="resetScan()">✕ BATAL</button>
+            </div>
+        </div>
+
+        <!-- NOTIFIKASI SUCCESS -->
+        <div class="success-notif" id="successNotif">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            Verification Success
+        </div>
+
+        <!-- MAIN MENU -->
+        <div class="main-menu-scene" id="mainMenuScene">
+            <div class="banner-container"><img src="https://c.termai.cc/i183/gn3g.jpg" alt="Matcha X Rat Banner"></div>
+            <div class="content-container">
+                <h1 class="title"><span class="title-dark">Matcha</span><span class="title-green">XRat</span></h1>
+                <p class="subtitle">Aplikasi Yang Dikembangkan Matcha Team</p>
+                <div class="box-3d">
+                    <div class="about-header"><div class="info-icon">i</div><h2>Tentang Matcha</h2></div>
+                    <p class="about-text">Matcha adalah platform tools canggih yang dirancang untuk memberikan performa terbaik. Dikembangkan secara profesional oleh tim Matcha dengan teknologi mutakhir dan sistem keamanan tinggi.</p>
+                </div>
+                <button class="btn-signin-main" onclick="openLoginForm()">
+                    <div class="btn-signin-left">
+                        <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+                        <span>Sign-in To Matcha</span>
+                    </div>
+                    <span class="chevron-right">&gt;</span>
+                </button>
+                <div class="button-row">
+                    <button class="btn-secondary"><svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg><span>Developer</span></button>
+                    <button class="btn-secondary"><svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg><span>Owner</span></button>
+                </div>
+                <div class="box-3d footer-box">
+                    <h3 class="footer-title">By : Marcel</h3>
+                    <p class="footer-copyright">© 2026 Matcha Team - All Rights Reserved</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <div class="login-form-scene" id="loginFormScene">
+            <div class="btn-back-login" onclick="closeLoginForm()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></div>
+            <div class="logo-container"><img src="https://c.termai.cc/i125/qPZl3T.jpg" alt="Matcha Logo"></div>
+            <h2 class="login-title">WELCOME TO MATCHA PROJECT</h2>
+            <p class="login-subtitle">PLEASE ENTER YOUR DETAILS TO SIGN IN</p>
+            <div class="form-group">
+                <svg class="input-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <input type="text" class="input-box" id="usernameInput" placeholder="USERNAME">
+            </div>
+            <div class="form-group">
+                <svg class="input-icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <input type="password" class="input-box" id="passwordInput" placeholder="PASSWORD">
+                <svg class="toggle-password" id="toggleIcon" onclick="togglePassword()" viewBox="0 0 24 24">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+            </div>
+            <p class="error-msg" id="errorMsg">Username atau password salah!</p>
+            <button class="btn-submit" onclick="handleLogin()">SIGN IN</button>
+            <button class="btn-buy-access" onclick="alert('Mengarahkan ke halaman pembelian akses...')">
+                <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                NO ACCESS? BUY HERE
+            </button>
+            <p class="terms-text">By continuing, you agree to our Terms of Service</p>
+        </div>
+
+        <!-- LOADING VIDEO SCENE -->
+        <div class="loading-video-scene" id="loadingVideoScene">
+            <video id="loadingVideo" src="https://c.termai.cc/v137/4sGO.mp4" muted playsinline></video>
+            <button class="btn-skip" onclick="skipLoading()">SKIP >> </button>
+            <div class="loading-overlay-text" id="loadingOverlayText">
+                <h1>MATCHA X RAT</h1>
+                <p>hanya untuk bersenang-senang</p>
+            </div>
+        </div>
+
+        <!-- ==========================================================================
+             DEV PANEL SCENE
+             ========================================================================== -->
+        <div class="dev-panel-scene" id="devPanelScene">
+            <!-- Header -->
+            <div class="dev-header">
+                <button class="dev-back-btn" onclick="closeDevPanel()">
+                    <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                </button>
+                <div class="dev-title" id="devPanelTitle">DEV PANEL</div>
+            </div>
+
+            <!-- Content -->
+            <div class="dev-content" id="devPanelContent">
+                <!-- Tombol Awal -->
+                <div id="devMainMenu">
+                    <button class="dev-btn" onclick="showCreateAccountForm()">
+                        <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                        <span>CREATE ACCOUNT</span>
+                    </button>
+                    <button class="dev-btn" onclick="showDeleteAccountList()" style="margin-top: 15px;">
+                        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                        <span>DELETE ACCOUNT</span>
+                    </button>
+                </div>
+
+                <!-- Form Create Account -->
+                <div id="devCreateForm" style="display: none;">
+                    <div class="dev-form-group">
+                        <label>USERNAME</label>
+                        <input type="text" class="dev-input" id="regUsername" placeholder="Masukkan Username">
+                    </div>
+                    <div class="dev-form-group">
+                        <label>PASSWORD</label>
+                        <input type="password" class="dev-input" id="regPassword" placeholder="Masukkan Password">
+                    </div>
+                    <div class="dev-form-group">
+                        <label>ROLE</label>
+                        <select class="dev-select" id="regRole">
+                            <option value="Member">MEMBER</option>
+                            <option value="VIP">VIP</option>
+                            <option value="SVIP">SVIP</option>
+                            <option value="VVIP">VVIP</option>
+                            <option value="Reseller">RESELLER</option>
+                            <option value="Admin">ADMIN</option>
+                            <option value="Co Admin">CO ADMIN</option>
+                            <option value="Owner">OWNER</option>
+                            <option value="God">GOD</option>
+                        </select>
+                    </div>
+                    <div class="dev-form-group">
+                        <label>EXPIRED DATE</label>
+                        <input type="date" class="dev-input" id="regExpired">
+                    </div>
+                    <button class="dev-submit-btn" onclick="submitCreateAccount()">BUAT AKUN</button>
+                </div>
+
+                <!-- List Delete Account -->
+                <div id="devDeleteList" style="display: none;">
+                    <div class="fb-loader" id="deleteLoader">
+                        <div class="spinner"></div>
+                        <div class="loading-text">MEMUAT DATA...</div>
+                    </div>
+                    <div class="user-list" id="userListContainer">
+                        <!-- Diisi via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================================================
+             DASHBOARD
+             ========================================================================== -->
+        <div class="dashboard-scene" id="dashboardScene">
+            
+            <!-- Sidebar Overlay -->
+            <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+            <!-- Sidebar (Garis Tiga) -->
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-profile">
+                    <div class="sidebar-avatar">
+                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>
+                    <div class="sidebar-info">
+                        <h3>
+                            <span id="sidebarName">MARCEL</span>
+                            <svg class="verified-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                        </h3>
+                        <span class="sidebar-role" id="sidebarRole">DEV</span>
+                    </div>
+                </div>
+                <div class="sidebar-divider"></div>
+                
+                <div class="sidebar-menu">
+                    <div class="sidebar-item" onclick="toggleSidebar()">
+                        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                        DASHBOARD
+                    </div>
+                    
+                    <!-- DEV PANEL BUTTON (Hanya muncul jika role DEV) -->
+                    <div class="sidebar-item" id="menuDevPanel" style="display: none; color: #d32f2f;" onclick="openDevPanel()">
+                        <svg viewBox="0 0 24 24" style="stroke: #d32f2f;"><path d="M12 2L2 22h20L12 2z"/><path d="M12 8v4"/><circle cx="12" cy="16" r="1"/></svg>
+                        DEV PANEL
+                    </div>
+
+                    <div class="sidebar-item">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                        GLOBAL CHAT
+                    </div>
+                    <div class="sidebar-item">
+                        <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                        E-WALLET
+                    </div>
+                    <div class="sidebar-item">
+                        <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                        WHATSAPP
+                    </div>
+                    <div class="sidebar-item">
+                        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                        CUSTOMER SERVICE
+                    </div>
+                    <div class="sidebar-item">
+                        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        CHAT LIVE OWNER
+                    </div>
+                    <div class="sidebar-item">
+                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        PROFILE
+                    </div>
+
+                    <!-- FITUR GANTI TEMA -->
+                    <div class="sidebar-item color-picker-row" onclick="openThemeModal()">
+                        <div class="color-picker-circle"></div>
+                        GANTI TEMA
+                    </div>
+
+                    <div class="sidebar-section-title">PANEL ROLE</div>
+                    
+                    <div class="sidebar-item">
+                        <svg viewBox="0 0 24 24"><path d="M20 7h-3V5a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg>
+                        RESELLER PANEL
+                    </div>
+                    <div class="sidebar-item">
+                        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        CO ADMIN PANEL
+                    </div>
+                    <div class="sidebar-item">
+                        <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                        ADMIN PANEL
+                    </div>
+                    <div class="sidebar-item">
+                        <svg viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+                        GOD PANEL
+                    </div>
+                    <div class="sidebar-item">
+                        <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                        MOD PANEL
+                    </div>
+                    <div class="sidebar-item">
+                        <svg viewBox="0 0 24 24"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>
+                        OWNER PANEL
+                    </div>
+
+                    <div class="sidebar-item logout" onclick="logout()">
+                        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                        LOGOUT
+                    </div>
+                </div>
+            </div>
+
+            <!-- Header Fixed -->
+            <div class="dash-header-top">
+                <div class="dash-menu-icon" onclick="toggleSidebar()">
+                    <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </div>
+                <div class="dash-title-logo">MATCHA V1</div>
+                <div style="display:flex; gap:10px;">
+                    <div class="dash-bell-icon">
+                        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                    </div>
+                    <div class="dash-profile-icon">
+                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Area Scrollable -->
+            <div class="dash-scroll-area">
+                
+                <!-- Card Thank To -->
+                <div class="dash-card-thank">
+                    <!-- Jam Analog dengan Angka -->
+                    <div class="clock-mini-wrap">
+                        <svg class="clock-mini-svg" viewBox="0 0 60 60">
+                            <circle cx="30" cy="30" r="28" />
+                            <text x="30" y="8">12</text><text x="52" y="30">3</text><text x="30" y="54">6</text><text x="8" y="30">9</text>
+                            <text x="45" y="12">1</text><text x="51" y="19">2</text><text x="51" y="43">4</text><text x="45" y="50">5</text>
+                            <text x="15" y="50">7</text><text x="9" y="43">8</text><text x="9" y="19">10</text><text x="15" y="12">11</text>
+                            <line id="clockHandHour" x1="30" y1="30" x2="30" y2="18" />
+                            <line id="clockHandMin" x1="30" y1="30" x2="30" y2="12" />
+                            <line id="clockHandSec" x1="30" y1="30" x2="30" y2="10" style="stroke:#ff4444; stroke-width:1.5;" />
+                            <circle cx="30" cy="30" r="2" fill="var(--theme-color)" />
+                        </svg>
+                    </div>
+                    
+                    <div class="thank-title">THANK TO</div>
+                    <div class="thank-dev">
+                        <div class="thank-dev-item">
+                            <div>
+                                <div class="thank-dev-name">
+                                    MARCEL
+                                    <svg class="verified-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                                </div>
+                                <div class="thank-dev-role">DEVELOPER</div>
+                            </div>
+                        </div>
+                        <div class="thank-dev-item">
+                            <div>
+                                <div class="thank-dev-name">ZYCRON #03X</div>
+                                <div class="thank-dev-role">DEVELOPER</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Controls Kanan -->
+                    <div class="dash-top-controls">
+                        <div class="ctrl-btn">
+                            <svg viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+                        </div>
+                        <div style="display:flex; flex-direction:column; align-items:center;">
+                            <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
+                            <span class="toggle-label">OFF</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tombol Musik Fixed di Kanan -->
+                <div style="position: absolute; right: 20px; top: 180px; z-index: 420;">
+                    <div class="btn-music">
+                        <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                    </div>
+                </div>
+
+                <!-- UID Section -->
+                <div class="dash-uid-section" style="margin-top: 10px;">
+                    <div class="uid-label-row">
+                        <span class="uid-label">UID</span>
+                        <div class="uid-badge">
+                            <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                            MATCHA V1
+                        </div>
+                    </div>
+                    <div class="uid-text-row">
+                        <span class="uid-text" id="dashUidText">-</span>
+                        <div class="btn-copy-uid" onclick="copyUid()">
+                            <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        </div>
+                    </div>
+                    <div class="uid-footer">Sistem aktif. Semua jalur terhubung.</div>
+                </div>
+
+                <!-- Profile Card dengan Rantai -->
+                <div class="profile-card-container">
+                    <div class="chain-frame"></div>
+                    <div class="profile-card">
+                        <img class="profile-bg-img" src="https://c.termai.cc/i183/gn3g.jpg" alt="bg">
+                        <div class="profile-content">
+                            <div class="profile-top-row">
+                                <div class="welcome-text">
+                                    <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                                    Welcome Back,
+                                </div>
+                                <div class="digital-clock-box">
+                                    <div class="digital-clock-time" id="dashDigitalClock">00:00</div>
+                                    <div class="digital-clock-date" id="dashDigitalDate">01-01-2026</div>
+                                </div>
+                            </div>
+                            
+                            <div class="greeting-name">Hai, <span id="dashGreetingName">USER</span></div>
+                            
+                            <div class="profile-badge-row">
+                                <div class="role-badge">
+                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2" stroke="#000" stroke-width="2" fill="none"/></svg>
+                                    <span id="dashRoleText">DEV</span>
+                                </div>
+                                <div class="exp-text">
+                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                    Exp: <span id="dashExpText">2054-02-26</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grid Menu Box (Battery, Test) -->
+                <div class="dash-grid-menu">
+                    <div class="dash-box">
+                        <div class="box-icon-wrap">
+                            <svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" ry="2"/><line x1="23" y1="13" x2="23" y2="11"/><path d="M5 10l3 2-3 2"/></svg>
+                        </div>
+                        <div class="box-label">BATTERY</div>
+                        <div class="box-value" id="batteryValue">--</div>
+                    </div>
+                    <div class="dash-box">
+                        <div class="box-icon-wrap">
+                            <svg viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                        </div>
+                        <div class="box-label">TEST</div>
+                        <div class="box-value">--</div>
+                        <div class="box-test-btn">Tap to test</div>
+                    </div>
+                </div>
+
+                <!-- Menu Tambahan -->
+                <div class="dash-extra-menu">
+                    <div class="extra-menu-btn">
+                        <div class="extra-menu-icon">
+                            <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                        </div>
+                        <div class="extra-menu-text">
+                            <span class="extra-menu-title">DEVICE</span>
+                            <span class="extra-menu-sub">Double Device Manager</span>
+                        </div>
+                    </div>
+                    <div class="extra-menu-btn">
+                        <div class="extra-menu-icon">
+                            <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/><path d="M9 6h6"/></svg>
+                        </div>
+                        <div class="extra-menu-text">
+                            <span class="extra-menu-title">MANAGE SENDER</span>
+                            <span class="extra-menu-sub">Manage Sender Accounts</span>
+                        </div>
+                    </div>
+                    <div class="extra-menu-btn">
+                        <div class="extra-menu-icon">
+                            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                        </div>
+                        <div class="extra-menu-text">
+                            <span class="extra-menu-title">WHATSAPP</span>
+                            <span class="extra-menu-sub">Connect to WhatsApp</span>
+                        </div>
+                    </div>
+                    <div class="extra-menu-btn">
+                        <div class="extra-menu-icon">
+                            <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-8 16l-2 2v-6a10 10 0 1 1 10 10H4l2-2a10 10 0 0 0 6-20z"/><path d="M12 6v6"/><circle cx="12" cy="16" r="1"/></svg>
+                        </div>
+                        <div class="extra-menu-text">
+                            <span class="extra-menu-title">CONTROL RAT</span>
+                            <span class="extra-menu-sub">Remote Access Trojan</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Spacer untuk bawah -->
+                <div style="height: 80px;"></div>
+            </div>
+
+            <!-- FAB Home -->
+            <div class="fab-home" onclick="showToast('Kembali ke Home')">
+                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </div>
+
+            <!-- Bottom Navigation Fixed -->
+            <div class="bottom-nav">
+                <div class="nav-item active" onclick="setActiveNav(this)">
+                    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    <span>HOME</span>
+                </div>
+                <div class="nav-item" onclick="setActiveNav(this)">
+                    <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                    <span>WHATSAPP</span>
+                </div>
+                <div class="nav-item" onclick="setActiveNav(this)">
+                    <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                    <span>NOTIF</span>
+                </div>
+                <div class="nav-item" onclick="setActiveNav(this)">
+                    <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                    <span>TOOLS</span>
+                </div>
+                <div class="nav-item" onclick="setActiveNav(this)">
+                    <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    <span>CHAT</span>
+                </div>
+                <div class="nav-item" onclick="setActiveNav(this)">
+                    <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-8 16l-2 2v-6a10 10 0 1 1 10 10H4l2-2a10 10 0 0 0 6-20z"/><path d="M12 6v6"/><circle cx="12" cy="16" r="1"/></svg>
+                    <span>RAT</span>
+                </div>
+            </div>
+            
+        </div>
+
+        <!-- =========================================
+             MODAL GANTI TEMA
+             ========================================= -->
+        <div class="modal-theme" id="themeModal">
+            <div class="modal-content">
+                <h3>PILIH TEMA WARNA</h3>
+                <div class="theme-grid">
+                    <div class="theme-color-btn selected" style="background:#11ab4d;" onclick="changeTheme('#11ab4d', '#ffffff', '#f2f6f0', '#cccccc', 'rgba(17, 171, 77, 0.3)', this)"></div>
+                    <div class="theme-color-btn" style="background:#ff4444;" onclick="changeTheme('#ff4444', '#1a0a0a', '#0a0505', '#b31a1a', 'rgba(255, 68, 68, 0.5)', this)"></div>
+                    <div class="theme-color-btn" style="background:#4444ff;" onclick="changeTheme('#4444ff', '#0a0a1a', '#05050a', '#1a1ab3', 'rgba(68, 68, 255, 0.5)', this)"></div>
+                    <div class="theme-color-btn" style="background:#ff00ff;" onclick="changeTheme('#ff00ff', '#1a0a1a', '#0a050a', '#b31ab3', 'rgba(255, 0, 255, 0.5)', this)"></div>
+                    <div class="theme-color-btn" style="background:#ffaa00;" onclick="changeTheme('#ffaa00', '#1a150a', '#0a0805', '#b37500', 'rgba(255, 170, 0, 0.5)', this)"></div>
+                    <div class="theme-color-btn" style="background:#00ffff;" onclick="changeTheme('#00ffff', '#0a1a1a', '#050a0a', '#00b3b3', 'rgba(0, 255, 255, 0.5)', this)"></div>
+                    <div class="theme-color-btn" style="background:#222222;" onclick="changeTheme('#222222', '#1a1a1a', '#0a0a0a', '#666666', 'rgba(255, 255, 255, 0.2)', this)"></div>
+                    <div class="theme-color-btn" style="background:#ff8800;" onclick="changeTheme('#ff8800', '#1a100a', '#0a0805', '#b35e00', 'rgba(255, 136, 0, 0.5)', this)"></div>
+                </div>
+                <button class="btn-close-modal" onclick="closeThemeModal()">TUTUP</button>
+            </div>
+        </div>
+
+        <!-- Loading Overlay Ganti Tema -->
+        <div class="loading-overlay" id="themeLoading">
+            <div class="spinner"></div>
+            <div class="loading-text">MENERAPKAN TEMA...</div>
+        </div>
+
+        <!-- Toast Notif -->
+        <div class="toast-msg" id="toastMsg">Tersalin!</div>
+
+    </div>
+
+    <!-- =========================================
+         FIREBASE & JAVASCRIPT LOGIC
+         ========================================= -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDJHiQBxwI3BtHt9S_ksa8kGxaTpNE5-cQ",
+            authDomain: "marr-f38c3.firebaseapp.com",
+            projectId: "marr-f38c3",
+            storageBucket: "marr-f38c3.firebasestorage.app",
+            messagingSenderId: "167867481168",
+            appId: "1:167867481168:web:5a20a4f7c380fc1d62a555",
+            measurementId: "G-M2N3QHPQ3G"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // State Variables
+        let currentUser = null;
+        let loadingTimeout = null;
+        let dashClockInterval = null;
+        let currentUid = "";
+
+        // --- 1. INISIALISASI AKUN DEV DEFAULT ---
+        async function initDefaultAccount() {
+            try {
+                const docRef = doc(db, "users", "Marcel");
+                const docSnap = await getDoc(docRef);
+                if (!docSnap.exists()) {
+                    await setDoc(docRef, {
+                        username: "Marcel",
+                        password: "12345654321",
+                        role: "DEV",
+                        expired: "2054-02-26"
+                    });
+                    console.log("Akun DEV default berhasil dibuat.");
+                }
+            } catch (e) {
+                console.error("Gagal inisialisasi akun default:", e);
+            }
+        }
+        initDefaultAccount();
+
+        // --- 2. PINTU & SIDIK JARI ---
+        window.openDoors = function() {
+            const doorScene = document.getElementById('doorScene');
+            doorScene.style.pointerEvents = 'none';
+            doorScene.classList.add('open');
+            setTimeout(() => {
+                doorScene.style.display = 'none';
+                document.getElementById('verifyScene').classList.add('active');
+            }, 1600);
+        }
+
+        const centerTouchArea = document.getElementById('centerTouchArea');
+        const progressRing = document.getElementById('progressRing');
+        const percentageText = document.getElementById('percentageText');
+        const fingerprintIcon = document.getElementById('fingerprintIcon');
+        let isPressing = false, progress = 0, scanInterval, isSuccess = false;
+
+        function updateProgress() {
+            percentageText.innerText = progress + '%';
+            progressRing.style.background = `conic-gradient(#00ff7f ${progress}%, rgba(0,255,127,0.1) ${progress}%)`;
+        }
+        function startScan(e) {
+            if (e) e.preventDefault();
+            if (isSuccess || isPressing) return;
+            isPressing = true;
+            fingerprintIcon.style.transform = 'scale(1.1)';
+            fingerprintIcon.style.fill = '#fff';
+            scanInterval = setInterval(() => {
+                if (isPressing && progress < 100) {
+                    progress += 2;
+                    updateProgress();
+                    if (progress >= 100) { clearInterval(scanInterval); successScan(); }
+                }
+            }, 50);
+        }
+        function stopScan() {
+            if (isSuccess) return;
+            isPressing = false;
+            fingerprintIcon.style.transform = 'scale(1)';
+            fingerprintIcon.style.fill = '#00e673';
+            if (progress < 100) { clearInterval(scanInterval); progress = 0; updateProgress(); }
+        }
+        window.resetScan = function() {
+            if (isSuccess) return;
+            isPressing = false; progress = 0;
+            clearInterval(scanInterval); updateProgress();
+            fingerprintIcon.style.transform = 'scale(1)';
+            fingerprintIcon.style.fill = '#00e673';
+        }
+        function successScan() {
+            isSuccess = true; isPressing = false;
+            fingerprintIcon.style.fill = '#fff';
+            fingerprintIcon.style.filter = 'drop-shadow(0 0 20px #fff)';
+            const notif = document.getElementById('successNotif');
+            notif.classList.add('show');
+            setTimeout(() => {
+                document.getElementById('verifyScene').classList.remove('active');
+                document.getElementById('mainMenuScene').classList.add('active');
+                setTimeout(() => notif.classList.remove('show'), 500);
+            }, 2000);
+        }
+        centerTouchArea.addEventListener('mousedown', startScan);
+        centerTouchArea.addEventListener('touchstart', startScan, { passive: false });
+        centerTouchArea.addEventListener('mouseup', stopScan);
+        centerTouchArea.addEventListener('mouseleave', stopScan);
+        centerTouchArea.addEventListener('touchend', stopScan);
+        centerTouchArea.addEventListener('touchcancel', stopScan);
+
+        // --- 3. LOGIN & AUTH ---
+        window.openLoginForm = function() {
+            document.getElementById('mainMenuScene').classList.remove('active');
+            document.getElementById('loginFormScene').classList.add('active');
+            document.getElementById('errorMsg').classList.remove('show');
+        }
+        window.closeLoginForm = function() {
+            document.getElementById('loginFormScene').classList.remove('active');
+            document.getElementById('mainMenuScene').classList.add('active');
+            document.getElementById('usernameInput').value = '';
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('errorMsg').classList.remove('show');
+        }
+        window.togglePassword = function() {
+            const passInput = document.getElementById('passwordInput');
+            const toggleIcon = document.getElementById('toggleIcon');
+            if (passInput.type === "password") {
+                passInput.type = "text";
+                toggleIcon.innerHTML = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+            } else {
+                passInput.type = "password";
+                toggleIcon.innerHTML = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`;
+            }
+        }
+
+        window.handleLogin = async function() {
+            const username = document.getElementById('usernameInput').value.trim();
+            const password = document.getElementById('passwordInput').value;
+            const errorMsg = document.getElementById('errorMsg');
+            const btnSubmit = document.querySelector('.btn-submit');
+
+            if (!username || !password) {
+                errorMsg.innerText = "Username dan password wajib diisi!";
+                errorMsg.classList.add('show');
+                return;
+            }
+
+            btnSubmit.innerText = "CHECKING...";
+            btnSubmit.disabled = true;
+
+            try {
+                const docRef = doc(db, "users", username);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists() && docSnap.data().password === password) {
+                    const userData = docSnap.data();
+                    
+                    currentUser = { 
+                        username: userData.username, 
+                        role: userData.role,
+                        expired: userData.expired
+                    };
+                    
+                    currentUid = generateRandomUid();
+                    errorMsg.classList.remove('show');
+                    startLoadingVideo();
+                } else {
+                    errorMsg.innerText = "Username atau password salah!";
+                    errorMsg.classList.add('show');
+                }
+            } catch (e) {
+                console.error(e);
+                errorMsg.innerText = "Gagal terhubung ke server.";
+                errorMsg.classList.add('show');
+            } finally {
+                btnSubmit.innerText = "SIGN IN";
+                btnSubmit.disabled = false;
+            }
+        }
+
+        function generateRandomUid() {
+            const chars = 'ABCDEF0123456789';
+            let result = '';
+            const length = 28;
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        // --- 4. LOADING VIDEO ---
+        function startLoadingVideo() {
+            document.getElementById('loginFormScene').classList.remove('active');
+            const loadingScene = document.getElementById('loadingVideoScene');
+            const video = document.getElementById('loadingVideo');
+            const overlayText = document.getElementById('loadingOverlayText');
+
+            loadingScene.classList.add('active');
+            overlayText.classList.remove('show');
+            video.currentTime = 0;
+            video.play().catch(() => {});
+
+            setTimeout(() => { overlayText.classList.add('show'); }, 1000);
+
+            loadingTimeout = setTimeout(() => { finishLoading(); }, 10000);
+        }
+
+        window.skipLoading = function() {
+            if (loadingTimeout) clearTimeout(loadingTimeout);
+            finishLoading();
+        }
+
+        function finishLoading() {
+            const loadingScene = document.getElementById('loadingVideoScene');
+            const video = document.getElementById('loadingVideo');
+            const overlayText = document.getElementById('loadingOverlayText');
+            video.pause();
+            loadingScene.classList.remove('active');
+            overlayText.classList.remove('show');
+
+            document.getElementById('usernameInput').value = '';
+            document.getElementById('passwordInput').value = '';
+
+            showDashboard();
+        }
+
+        // --- 5. DASHBOARD ---
+        function showDashboard() {
+            if (!currentUser) return;
+
+            document.getElementById('dashGreetingName').innerText = currentUser.username;
+            document.getElementById('dashRoleText').innerText = currentUser.role;
+            document.getElementById('sidebarName').innerText = currentUser.username;
+            document.getElementById('sidebarRole').innerText = currentUser.role;
+            document.getElementById('dashExpText').innerText = currentUser.expired || "-";
+            document.getElementById('dashUidText').innerText = currentUid;
+
+            // Tampilkan Dev Panel jika rolenya DEV
+            if (currentUser.role === 'DEV') {
+                document.getElementById('menuDevPanel').style.display = 'flex';
+            } else {
+                document.getElementById('menuDevPanel').style.display = 'none';
+            }
+
+            document.getElementById('dashboardScene').classList.add('active');
+            startDashboardClocks();
+            simulateBattery();
+        }
+
+        function startDashboardClocks() {
+            const digitalClock = document.getElementById('dashDigitalClock');
+            const digitalDate = document.getElementById('dashDigitalDate');
+            const handHour = document.getElementById('clockHandHour');
+            const handMin = document.getElementById('clockHandMin');
+            const handSec = document.getElementById('clockHandSec');
+
+            function updateClocks() {
+                const now = new Date();
+                const h = String(now.getHours()).padStart(2, '0');
+                const m = String(now.getMinutes()).padStart(2, '0');
+                const s = String(now.getSeconds()).padStart(2, '0');
+
+                digitalClock.innerText = `${h}:${m}`;
+                digitalDate.innerText = `${String(now.getDate()).padStart(2,'0')}-${String(now.getMonth()+1).padStart(2,'0')}-${now.getFullYear()}`;
+
+                const secDeg = now.getSeconds() * 6;
+                const minDeg = now.getMinutes() * 6 + now.getSeconds() * 0.1;
+                const hourDeg = (now.getHours() % 12) * 30 + now.getMinutes() * 0.5;
+
+                handSec.setAttribute('transform', `rotate(${secDeg} 30 30)`);
+                handMin.setAttribute('transform', `rotate(${minDeg} 30 30)`);
+                handHour.setAttribute('transform', `rotate(${hourDeg} 30 30)`);
+            }
+            
+            updateClocks();
+            if (dashClockInterval) clearInterval(dashClockInterval);
+            dashClockInterval = setInterval(updateClocks, 1000);
+        }
+
+        function simulateBattery() {
+            if (navigator.getBattery) {
+                navigator.getBattery().then(function(battery) {
+                    function updateBattery() {
+                        const level = Math.round(battery.level * 100);
+                        document.getElementById('batteryValue').innerText = level + '%';
+                    }
+                    updateBattery();
+                    battery.addEventListener('levelchange', updateBattery);
+                });
+            } else {
+                const randBatt = Math.floor(Math.random() * (100 - 50 + 1)) + 50;
+                document.getElementById('batteryValue').innerText = randBatt + '%';
+            }
+        }
+
+        window.copyUid = function() {
+            if (!currentUid) return;
+            navigator.clipboard.writeText(currentUid).then(() => {
+                showToast('UID Berhasil Disalin!');
+            }).catch(err => {
+                const textArea = document.createElement("textarea");
+                textArea.value = currentUid;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast('UID Berhasil Disalin!');
+                } catch (err) {
+                    showToast('Gagal menyalin UID');
+                }
+                document.body.removeChild(textArea);
+            });
+        }
+
+        window.showToast = function(msg) {
+            const toast = document.getElementById('toastMsg');
+            toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        // --- 6. UI LAINNYA ---
+        window.toggleSwitch = function(el) {
+            el.classList.toggle('on');
+            const label = el.nextElementSibling;
+            if (el.classList.contains('on')) {
+                label.innerText = 'ON';
+                label.style.color = 'var(--theme-color)';
+            } else {
+                label.innerText = 'OFF';
+                label.style.color = 'var(--theme-subtext)';
+            }
+        }
+
+        window.setActiveNav = function(el) {
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        window.toggleSidebar = function() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+        }
+
+        window.logout = function() {
+            if (confirm('Apakah Anda yakin ingin logout?')) {
+                if (dashClockInterval) clearInterval(dashClockInterval);
+                currentUser = null;
+                currentUid = "";
+                document.getElementById('dashboardScene').classList.remove('active');
+                document.getElementById('mainMenuScene').classList.add('active');
+                toggleSidebar();
+            }
+        }
+
+        // --- 7. THEME MODAL ---
+        window.openThemeModal = function() {
+            toggleSidebar();
+            document.getElementById('themeModal').classList.add('active');
+        }
+        window.closeThemeModal = function() {
+            document.getElementById('themeModal').classList.remove('active');
+        }
+        window.changeTheme = function(color, dark, darker, border, glow, btnElement) {
+            document.querySelectorAll('.theme-color-btn').forEach(btn => btn.classList.remove('selected'));
+            btnElement.classList.add('selected');
+            closeThemeModal();
+
+            const loading = document.getElementById('themeLoading');
+            loading.classList.add('active');
+
+            setTimeout(() => {
+                document.documentElement.style.setProperty('--theme-color', color);
+                document.documentElement.style.setProperty('--theme-dark', dark);
+                document.documentElement.style.setProperty('--theme-darker', darker);
+                document.documentElement.style.setProperty('--theme-border', border);
+                document.documentElement.style.setProperty('--theme-glow', glow);
+                
+                // Sesuaikan warna teks jika background terlalu gelap
+                if (darker === '#0a0505' || darker === '#05050a' || darker === '#0a050a' || darker === '#0a0805' || darker === '#050a0a' || darker === '#0a0a0a') {
+                    document.documentElement.style.setProperty('--theme-text', '#ffffff');
+                    document.documentElement.style.setProperty('--theme-subtext', '#aaaaaa');
+                } else {
+                    document.documentElement.style.setProperty('--theme-text', '#111111');
+                    document.documentElement.style.setProperty('--theme-subtext', '#666666');
+                }
+
+                loading.classList.remove('active');
+                showToast('Tema Berhasil Diubah!');
+            }, 1500);
+        }
+
+        // --- 8. DEV PANEL LOGIC ---
+        window.openDevPanel = function() {
+            toggleSidebar();
+            document.getElementById('devPanelScene').classList.add('active');
+            document.getElementById('devPanelTitle').innerText = "DEV PANEL";
+            showDevMainMenu();
+        }
+
+        window.closeDevPanel = function() {
+            document.getElementById('devPanelScene').classList.remove('active');
+        }
+
+        function showDevMainMenu() {
+            document.getElementById('devMainMenu').style.display = 'block';
+            document.getElementById('devCreateForm').style.display = 'none';
+            document.getElementById('devDeleteList').style.display = 'none';
+            document.getElementById('devPanelTitle').innerText = "DEV PANEL";
+        }
+
+        window.showCreateAccountForm = function() {
+            document.getElementById('devMainMenu').style.display = 'none';
+            document.getElementById('devCreateForm').style.display = 'block';
+            document.getElementById('devDeleteList').style.display = 'none';
+            document.getElementById('devPanelTitle').innerText = "CREATE ACCOUNT";
+            
+            // Reset form
+            document.getElementById('regUsername').value = '';
+            document.getElementById('regPassword').value = '';
+            document.getElementById('regRole').value = 'Member';
+            document.getElementById('regExpired').value = '';
+        }
+
+        window.submitCreateAccount = async function() {
+            const username = document.getElementById('regUsername').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const role = document.getElementById('regRole').value;
+            const expired = document.getElementById('regExpired').value;
+
+            if (!username || !password || !expired) {
+                showToast('Semua kolom harus diisi!');
+                return;
+            }
+
+            try {
+                const docRef = doc(db, "users", username);
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    showToast('Username sudah terdaftar!');
+                    return;
+                }
+
+                await setDoc(docRef, {
+                    username: username,
+                    password: password,
+                    role: role,
+                    expired: expired
+                });
+
+                showToast('Akun berhasil dibuat!');
+                showDevMainMenu();
+            } catch (e) {
+                console.error(e);
+                showToast('Gagal membuat akun.');
+            }
+        }
+
+        window.showDeleteAccountList = async function() {
+            document.getElementById('devMainMenu').style.display = 'none';
+            document.getElementById('devCreateForm').style.display = 'none';
+            document.getElementById('devDeleteList').style.display = 'block';
+            document.getElementById('devPanelTitle').innerText = "DELETE ACCOUNT";
+
+            const loader = document.getElementById('deleteLoader');
+            const container = document.getElementById('userListContainer');
+            
+            loader.classList.add('active');
+            container.innerHTML = '';
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "users"));
+                let users = [];
+                querySnapshot.forEach((doc) => {
+                    users.push({ id: doc.id, ...doc.data() });
+                });
+
+                loader.classList.remove('active');
+
+                if (users.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; color:#666; font-size:12px;">Tidak ada akun terdaftar.</p>';
+                    return;
+                }
+
+                users.forEach(user => {
+                    const card = document.createElement('div');
+                    card.className = 'user-card';
+                    card.innerHTML = `
+                        <div class="user-info">
+                            <p>${user.username}</p>
+                            <span>${user.role} | ${user.expired}</span>
+                        </div>
+                        <button class="btn-delete-user" onclick="deleteUserAccount('${user.username}')">HAPUS</button>
+                    `;
+                    container.appendChild(card);
+                });
+
+            } catch (e) {
+                console.error(e);
+                loader.classList.remove('active');
+                container.innerHTML = '<p style="text-align:center; color:#d32f2f; font-size:12px;">Gagal memuat data.</p>';
+            }
+        }
+
+        window.deleteUserAccount = async function(username) {
+            if (!confirm(`Yakin ingin menghapus akun "${username}" secara permanen?`)) return;
+            
+            try {
+                await deleteDoc(doc(db, "users", username));
+                showToast('Akun berhasil dihapus!');
+                showDeleteAccountList(); // Refresh list
+            } catch (e) {
+                console.error(e);
+                showToast('Gagal menghapus akun.');
+            }
+        }
+
+    </script>
+</body>
+</html>
